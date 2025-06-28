@@ -1,0 +1,13 @@
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Node/npm (if using React later)
+node_modules/
+build/
+
+# Docker
+*.tar
