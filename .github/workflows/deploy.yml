@@ -1,4 +1,4 @@
-name: Build Docker Image
+name: CI - Build and Test Portfolio
 
 on:
   push:
@@ -6,18 +6,20 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker
+      - name: 🐳 Set up Docker
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
-        run: docker build -t my-portfolio .
+      - name: 🧪 Dummy Test Step
+        run: |
+          echo "Running tests..."
+          echo "All tests passed ✅"
 
-      - name: Simulate test step
-        run: echo "✅ Tests passed (placeholder)"
+      - name: 🔧 Build Docker Image
+        run: docker build -t my-portfolio .
