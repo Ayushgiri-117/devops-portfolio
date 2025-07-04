@@ -1,4 +1,4 @@
-name: CI - Build and Test Portfolio
+name: Deploy to EC2
 
 on:
   push:
@@ -6,23 +6,37 @@ on:
       - main
 
 jobs:
-  build-and-test:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: 🐳 Set up Docker
-        uses: docker/setup-buildx-action@v3
-
-      - name: 🧪 Dummy Test Step
+      - name: Set up SSH key
         run: |
-          echo "Running tests..."
-          echo "All tests passed ✅"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+        shell: bash
 
-      - name: 🔧 Build and Push Docker Image to DockerHub
+      - name: 🧹 Clean old app & copy new code
         run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/portfolio-app:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/portfolio-app:latest
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            mkdir -p ~/app
+            cd ~/app
+            docker stop portfolio || true
+            docker rm portfolio || true
+            docker rmi portfolio-app || true
+            rm -rf *
+          EOF
+
+          scp -o StrictHostKeyChecking=no -r . ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app
+
+      - name: 🚀 Build and Run Docker on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd ~/app
+            docker build -t portfolio-app .
+            docker run -d -p 80:80 --name portfolio portfolio-app
+          EOF

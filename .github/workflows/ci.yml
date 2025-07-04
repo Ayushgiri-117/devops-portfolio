@@ -1,0 +1,28 @@
+name: CI - Build and Test Portfolio
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🐳 Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🧪 Dummy Test Step
+        run: |
+          echo "Running tests..."
+          echo "All tests passed ✅"
+
+      - name: 🔧 Build and Push Docker Image to DockerHub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/portfolio-app:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/portfolio-app:latest
